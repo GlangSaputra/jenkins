@@ -2,41 +2,37 @@ pipeline {
     agent any
 
     tools {
-        maven 'maven-3.9'
-    }
-
-    environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
-        IMAGE_NAME = "nfacademy/nfapp"
+        maven 'maven3.9'
     }
 
     stages {
-        stage("build jar") {
+        stage('Build JAR') {
             steps {
-                sh "mvn package"
+                sh 'mvn clean package'
             }
         }
 
-        stage("build image") {
+        stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${IMAGE_NAME} ."
-            }
-        }
-
-        stage("push image") {
-            steps {
-                withDockerRegistry([credentialsId: DOCKERHUB_CREDENTIALS, url: ""]) {
-                    sh "docker push ${IMAGE_NAME}"
+                script {
+                    echo 'Building the Docker image...'
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker-hub-repo',
+                        usernameVariable: 'USER',
+                        passwordVariable: 'PASS'
+                    )]) {
+                        sh 'docker build -t aeshionz/demo-app:jma-2.0 .'
+                        sh "echo $PASS | docker login -u $USER --password-stdin"
+                        sh 'docker push aeshionz/demo-app:jma-2.0'
+                    }
                 }
             }
         }
 
-        stage("deploy") {
+        stage('Deploy') {
             steps {
                 script {
-                    echo "Deploying the application..."
-                    // Tambahkan perintah deploy aktual di sini, misalnya:
-                    // sh "kubectl apply -f deployment.yaml"
+                    echo 'Deploying the application...'
                 }
             }
         }
