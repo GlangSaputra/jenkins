@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         BRANCH_NAME = "jenkins-job"
+        IMAGE_NAME = "demo-app"
+        IMAGE_TAG = "jma-1.0"
     }
 
     stages {
@@ -12,9 +14,30 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                echo "Building the application..."
+                script {
+                    echo "Building Docker image..."
+                    bat '''
+                        docker build -t galanglang/%IMAGE_NAME%:%IMAGE_TAG% .
+                    '''
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    // Gunakan credential Docker Hub dari Jenkins
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        bat '''
+                            echo Logging in to Docker Hub...
+                            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                            docker push %DOCKER_USER%/%IMAGE_NAME%:%IMAGE_TAG%
+                            docker logout
+                        '''
+                    }
+                }
             }
         }
 
