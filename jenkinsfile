@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Build jar') {
             steps {
-                sh 'mvn package'
+                bat 'mvn clean package -DskipTests'
             }
         }
 
@@ -13,9 +13,9 @@ pipeline {
                 script {
                     echo 'Building the Docker Image...'
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                        sh 'docker build -t aeshionz/demo-app:jma-2.0 .'
-                        sh "echo $PASS | docker login -u $USER --password-stdin"
-                        sh 'docker push aeshionz/demo-app:jma-2.0'
+                        bat 'docker build -t aeshionz/demo-app:jma-2.0 .'
+                        bat """echo %PASS% | docker login -u %USER% --password-stdin"""
+                        bat 'docker push aeshionz/demo-app:jma-2.0'
                     }
                 }
             }
