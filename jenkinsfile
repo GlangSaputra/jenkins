@@ -2,25 +2,16 @@ pipeline {
     agent any
 
     environment {
-        BRANCH_NAME = "jenkins-job"
-        IMAGE_NAME = "demo-app"
+        IMAGE_NAME = "galanglang/demo-app"
         IMAGE_TAG = "jma-1.0"
     }
 
     stages {
-        stage('Test') {
-            steps {
-                echo "Testing the application on branch ${BRANCH_NAME}"
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
                     echo "Building Docker image..."
-                    bat '''
-                        docker build -t galanglang/%IMAGE_NAME%:%IMAGE_TAG% .
-                    '''
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 }
             }
         }
@@ -28,22 +19,15 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    // Gunakan credential Docker Hub dari Jenkins
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        bat '''
-                            echo Logging in to Docker Hub...
-                            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
-                            docker push %DOCKER_USER%/%IMAGE_NAME%:%IMAGE_TAG%
+                    echo "Pushing image to Docker Hub..."
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh """
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                            docker push ${IMAGE_NAME}:${IMAGE_TAG}
                             docker logout
-                        '''
+                        """
                     }
                 }
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo "Deploying from ${BRANCH_NAME}"
             }
         }
     }
