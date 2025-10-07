@@ -1,35 +1,26 @@
 pipeline {
     agent any
 
+    environment {
+        BRANCH_NAME = "jenkins-job"
+    }
+
     stages {
         stage('Test') {
             steps {
-                script {
-                    echo "Testing the application..."
-                    echo "Executing pipeline for branch ${BRANCH_NAME}" 
-                }
+                echo "Testing the application on branch ${BRANCH_NAME}"
             }
         }
 
         stage('Build') {
-            when {
-                expression { BRANCH_NAME == 'main' } 
-            }
             steps {
-                script {
-                    echo "Building the application..."
-                }
+                echo "Building the application..."
             }
         }
 
         stage('Deploy') {
-            when {
-                expression { BRANCH_NAME == 'main' }
-            }
             steps {
-                script {
-                    echo "Deploying the application..."
-                }
+                echo "Deploying from ${BRANCH_NAME}"
             }
         }
     }
